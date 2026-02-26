@@ -141,6 +141,7 @@ class BaseLLM:
 
             if self.use_cache:
                 self._update_cache(question, response, prediction, gold)
+                self.save_cache()  # Save cache after each inference for checkpointing
 
             return response
 

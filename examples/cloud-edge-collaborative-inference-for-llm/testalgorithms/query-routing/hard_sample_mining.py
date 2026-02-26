@@ -20,6 +20,7 @@ import random
 from transformers import pipeline
 from sedna.common.class_factory import ClassFactory, ClassType
 from core.common.log import LOGGER
+from cloud_model import RateLimitError
 
 __all__ = ('BERTFilter', 'EdgeOnlyFilter', 'CloudOnlyFilter',
            'RandomRouterFilter', 'OracleRouterFilter', 'ResourceSensitiveRouterFilter')
@@ -207,6 +208,7 @@ class OracleRouterFilter(BaseFilter, abc.ABC):
         self.cloud_better = 0
         self.both_right = 0
         self.both_wrong = 0
+        self.rate_limit_exceeded = False
 
         self.edge_model = kwargs.get("edgemodel")
         self.cloud_model = kwargs.get("cloudmodel")
@@ -227,10 +229,22 @@ class OracleRouterFilter(BaseFilter, abc.ABC):
         bool
             `True` means hard sample, `False` means not.
         """
+        # If rate limit already exceeded, route to edge only
+        if self.rate_limit_exceeded:
+            return False
+        
         gold = data.get("gold", None)
 
         edge_result = self.edge_model.predict(data).get("prediction")
-        cloud_result = self.cloud_model.inference(data).get("prediction")
+        
+        # Try cloud inference, but catch rate limit errors
+        try:
+            cloud_result = self.cloud_model.inference(data).get("prediction")
+        except RateLimitError as e:
+            LOGGER.warning("Cloud API rate limit exceeded. Switching to edge-only mode for remaining samples.")
+            self.rate_limit_exceeded = True
+            # Route to edge when rate limit is hit
+            return False
 
         both_right = edge_result == gold and cloud_result == gold
         both_wrong = edge_result != gold and cloud_result != gold
@@ -263,6 +277,8 @@ class OracleRouterFilter(BaseFilter, abc.ABC):
             f"Edge Better: {self.edge_better},  ",
             f"Cloud Better: {self.cloud_better}"
         ]
+        if self.rate_limit_exceeded:
+            message.append("\n[WARNING] Cloud API rate limit was exceeded during execution.")
         LOGGER.info("".join(message))
 
 @ClassFactory.register(ClassType.HEM, alias="ResourceSensitiveRouter")

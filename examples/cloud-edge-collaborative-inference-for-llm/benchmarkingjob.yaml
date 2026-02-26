@@ -9,7 +9,7 @@ benchmarkingjob:
 
   # the url address of test environment configuration file; string type;
   # the file format supports yaml/yml;
-  testenv: "./examples/cloud-edge-collaborative-inference-for-llm/testenv/testenv.yaml"
+  testenv: "/home/prachi/ianvs/examples/cloud-edge-collaborative-inference-for-llm/testenv/testenv.yaml"
 
   # the configuration of test object
   test_object:
@@ -22,7 +22,7 @@ benchmarkingjob:
       - name: "query-routing"
         # the url address of test algorithm configuration file; string type;
         # the file format supports yaml/yml;
-        url: "./examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/test_queryrouting.yaml"
+        url: "/home/prachi/ianvs/examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/test_queryrouting.yaml"
 
   # the configuration of ranking leaderboard
   rank:

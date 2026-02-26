@@ -80,6 +80,10 @@ class BenchmarkingJob:
                  run all test cases,
                  save results of all test cases,
                  plot the results according to the visualization config of rank.
+        
+        This method now supports checkpointing and resuming from previous runs.
+        If the benchmarking job crashes or is interrupted, it will automatically
+        resume from the last checkpoint when restarted.
         """
         self.workspace = os.path.join(self.workspace, self.name)
 
@@ -91,11 +95,21 @@ class BenchmarkingJob:
         self.testcase_controller.build_testcases(test_env=self.test_env,
                                                  test_object=self.test_object)
 
+        # Check for existing checkpoint
+        checkpoint_file = os.path.join(self.workspace, "checkpoint.json")
+        if os.path.exists(checkpoint_file):
+            utils.get_logger().info(f"Resuming from checkpoint: {checkpoint_file}")
+        
         succeed_testcases, test_results = self.testcase_controller.run_testcases(self.workspace)
 
         if test_results:
             self.rank.save(succeed_testcases, test_results, output_dir=self.workspace)
             self.rank.plot()
+            
+            # Clean up checkpoint file after successful completion
+            if os.path.exists(checkpoint_file):
+                os.remove(checkpoint_file)
+                utils.get_logger().info("Benchmarking completed successfully. Checkpoint file removed.")
 
     def _parse_config(self, config: dict):
         # pylint: disable=C0103

@@ -24,6 +24,10 @@ os.environ['BACKEND_TYPE'] = 'TORCH'
 
 __all__ = ["BaseModel"]
 
+class RateLimitError(Exception):
+    """Exception raised when API rate limit is exceeded."""
+    pass
+
 @ClassFactory.register(ClassType.GENERAL, alias="CloudModel")
 class CloudModel:
     """Models being deployed on the Cloud
@@ -83,8 +87,14 @@ class CloudModel:
         try:
             return self.model.inference(data)
         except Exception as e:
-            LOGGER.error("Inference failed: %s", str(e))
-            raise RuntimeError("Inference failed. Check input data format and model readiness.") from e
+            error_msg = str(e)
+            # Detect rate limit errors (Groq API returns 429 status code)
+            if "rate limit" in error_msg.lower() or "429" in error_msg:
+                LOGGER.warning("Rate limit exceeded: %s", error_msg)
+                raise RateLimitError(error_msg) from e
+            else:
+                LOGGER.error("Inference failed: %s", error_msg)
+                raise RuntimeError("Inference failed. Check input data format and model readiness.") from e
 
     def cleanup(self):
         """Save the cache and cleanup the model.

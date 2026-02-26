@@ -3,3 +3,4 @@ from .huggingface_llm import HuggingfaceLLM
 from .vllm_llm import VllmLLM
 from .base_llm import BaseLLM
 from .eagle_llm import EagleSpecDecModel
+from .lade_llm import LadeSpecDecLLM

@@ -1,0 +1,18 @@
+# Minimal requirements for CPU-only local testing
+# This skips vllm and heavy GPU dependencies
+
+# Core LLM libraries (CPU-friendly)
+transformers>=4.30.0
+torch>=2.0.0  # Will install CPU version automatically
+openai>=1.0.0
+
+# Utilities
+accelerate>=0.20.0
+sentencepiece>=0.1.99
+tiktoken>=0.5.0
+
+# For dataset download (already installed)
+# kaggle
+
+# API client for Groq (lightweight)
+groq

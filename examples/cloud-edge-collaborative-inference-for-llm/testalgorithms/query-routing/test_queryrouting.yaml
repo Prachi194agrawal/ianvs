@@ -9,19 +9,19 @@ algorithm:
       # name of custom dataset processor; string type;
       name: "OracleRouterDatasetProcessor"
       # the url address of custom dataset processor; string type;
-      url: "./examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/data_processor.py"
+      url: "/home/prachi/ianvs/examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/data_processor.py"
 
     - type: "edgemodel"
       # name of edge model module; string type;
       name: "EdgeModel"
       # the url address of edge model module; string type;
-      url: "./examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/edge_model.py"
+      url: "/home/prachi/ianvs/examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/edge_model.py"
 
       hyperparameters:
       # name of the hyperparameter; string type;
         - model:
             values:
-              - "Qwen/Qwen2.5-7B-Instruct"
+              - "Qwen/Qwen2.5-1.5B-Instruct"
         - backend:
             # backend; string type;
             # currently the options of value are as follows:
@@ -31,9 +31,16 @@ algorithm:
             #  4> "EagleSpecDec": EAGLE Speculative Decoding framework;
             #  5> "LadeSepcDec": Lookahead Decoding framework;
             values:
-              - "huggingface"
-              - "vllm"
-              # - "EagleSpecDec"
+              - "api"
+        - api_provider:
+            values:
+              - "openai"  # Using OpenAI-compatible HuggingFace API
+        - api_key_env:
+            values:
+              - "HF_API_KEY"
+        - api_base_url:
+            values:
+              - "HF_BASE_URL"
 
         # If you're using speculative models, uncomment the following lines:
         # - draft_model:
@@ -66,22 +73,22 @@ algorithm:
       # name of python module; string type;
       name: "CloudModel"
       # the url address of python module; string type;
-      url: "./examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/cloud_model.py"
+      url: "/home/prachi/ianvs/examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/cloud_model.py"
 
       hyperparameters:
         # name of the hyperparameter; string type;
         - api_provider:
             values:
-              - "openai" 
+              - "groq" 
         - model:
             values:
-              - "gpt-4o-mini"
+              - "llama-3.3-70b-versatile"
         - api_key_env:
             values:
-              - "OPENAI_API_KEY"
+              - "GROQ_API_KEY"
         - api_base_url:
             values:
-              - "OPENAI_BASE_URL"
+              - "GROQ_BASE_URL"
         - temperature:
             values:
               - 0.9
@@ -103,4 +110,4 @@ algorithm:
       # BERTRouter, EdgeOnly, CloudOnly, RandomRouter, OracleRouter
       name: "OracleRouter"
       # the url address of python module; string type;
-      url: "./examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/hard_sample_mining.py"
+      url: "/home/prachi/ianvs/examples/cloud-edge-collaborative-inference-for-llm/testalgorithms/query-routing/hard_sample_mining.py"
