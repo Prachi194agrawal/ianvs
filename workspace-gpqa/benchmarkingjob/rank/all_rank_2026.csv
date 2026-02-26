@@ -1,0 +1,5 @@
+rank,algorithm,accuracy,edge_ratio,ttft,throughput,latency,cloud_prompt_tokens,cloud_completion_tokens,edge_prompt_tokens,edge_completion_tokens,paradigm,hard_example_mining,edgemodel,edgemodel_backend,cloudmodel,timestamp,cache_file
+1,query-routing,40.91,0.0,0.762,66.64,0.016,52553,109922,0,0,jointinference,CloudOnly,gpt-4o-mini,Unknown,Unknown,2026-02-15 00:55:11,/home/prachi/ianvs/workspace-gpqa/benchmarkingjob/query-routing/cache.json
+2,query-routing,27.78,100.0,0.121,110.5,0.009,0,0,62378,92109,jointinference,EdgeOnly,NousResearch/Llama-2-7b-chat-hf,EagleSpecDec,Unknown,2026-02-15 00:55:11,/home/prachi/ianvs/workspace-gpqa/benchmarkingjob/query-routing/cache.json
+3,query-routing,27.27,100.0,0.06,46.96,0.021,0,0,62378,92068,jointinference,EdgeOnly,NousResearch/Llama-2-7b-chat-hf,vllm,Unknown,2026-02-15 00:55:11,/home/prachi/ianvs/workspace-gpqa/benchmarkingjob/query-routing/cache.json
+4,query-routing,24.24,100.0,0.073,38.84,0.026,0,0,62378,92110,jointinference,EdgeOnly,NousResearch/Llama-2-7b-chat-hf,huggingface,Unknown,2026-02-15 00:55:11,/home/prachi/ianvs/workspace-gpqa/benchmarkingjob/query-routing/cache.json
