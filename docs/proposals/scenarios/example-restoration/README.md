@@ -35,8 +35,8 @@ It shifts the Example Restoration effort toward automated example health classif
 
 Phase 4 is an LFX Mentorship application proposal, not yet an accepted phase. It
 proposes to extend the Phase 3 CI validation direction repository-wide: a static
-validator (`scripts/validate_examples.py`) found 235 findings across 19 of the 29
-example families, all invisible to current CI. The proposal sequences a CI gate
+validator (`scripts/validate_examples.py`) found 235 findings across 20 of the 27
+benchmarking-job families, all invisible to current CI. The proposal sequences a CI gate
 first (so no new example can regress), then a family-by-family repair of the
 backlog behind a shrinking baseline, then two `core` patches that convert two of
 the highest-volume defect classes from silent-accept-then-crash into fail-fast

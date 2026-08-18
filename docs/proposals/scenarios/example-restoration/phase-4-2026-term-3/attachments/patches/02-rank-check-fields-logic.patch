@@ -24,14 +24,23 @@ its guard tests `isinstance(self.save_mode, list)` and its message says it
 "must be provided and be list type", so the one path that can fire prints
 advice that would itself be invalid config.
 
+Verified against `main` at 36ec008: applies cleanly (`git apply --check`),
+compiles, and functionally confirmed with a standalone Rank() smoke test --
+empty sort_by/visualization are now rejected, a non-string save_mode (e.g.
+an int, or "") is now rejected with the corrected message, and a valid
+config still parses.
+
 ---
- core/storymanager/rank/rank.py | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ core/storymanager/rank/rank.py | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/core/storymanager/rank/rank.py b/core/storymanager/rank/rank.py
+index bdff16e..af4d5bc 100644
 --- a/core/storymanager/rank/rank.py
 +++ b/core/storymanager/rank/rank.py
-@@ -61,25 +61,25 @@ class Rank:
+@@ -59,18 +59,18 @@ class Rank:
+         self._check_fields()
+ 
      def _check_fields(self):
 -        if not self.sort_by and not isinstance(self.sort_by, list):
 +        if not self.sort_by or not isinstance(self.sort_by, list):
@@ -51,14 +60,7 @@ diff --git a/core/storymanager/rank/rank.py b/core/storymanager/rank/rank.py
              raise ValueError(
                  f"rank's selected_dataitem({self.selected_dataitem}) "
                  f"must be provided and be dict type."
-             )
- 
-         if not self.selected_dataitem.get("paradigms"):
-             raise ValueError("not found paradigms of selected_dataitem in rank.")
- 
-         if not self.selected_dataitem.get("modules"):
-             raise ValueError("not found modules of selected_dataitem in rank.")
- 
+@@ -85,10 +85,10 @@ class Rank:
          if not self.selected_dataitem.get("metrics"):
              raise ValueError("not found metrics of selected_dataitem in rank.")
  
@@ -70,3 +72,5 @@ diff --git a/core/storymanager/rank/rank.py b/core/storymanager/rank/rank.py
 +                f"rank's save_mode({self.save_mode}) must be provided and be "
 +                f"string type, one of: selected_and_all, selected_only."
              )
+ 
+     @classmethod

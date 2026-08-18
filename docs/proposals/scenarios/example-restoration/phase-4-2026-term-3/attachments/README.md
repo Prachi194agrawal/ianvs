@@ -2,7 +2,9 @@
 
 Everything here was produced against `kubeedge/ianvs` at `main` and verified by
 running it. Repository state at time of audit: 151 YAML configs under `examples/`,
-29 example families, 46 benchmarking jobs, **235 findings across 19 families**.
+28 example directories (27 of which are benchmarking-job families; `aoa/` has no
+`benchmarkingjob.yaml`), 48 benchmarking jobs, **235 findings across 20 of the 27
+families**.
 
 ## Contents
 
@@ -56,16 +58,27 @@ is permanent.
 3. **`patches/01`** — closes the 52-finding `train_url` class at the source.
    Flag for explicit maintainer sign-off: it converts silent-accept-then-crash
    into fail-fast, so configs that "worked" (they did not) now error at parse time.
-4. **`patches/02`** — small, independent, low risk.
+   Applies cleanly against current `main` and is functionally verified (a
+   standalone `Dataset()` smoke test confirms `train_url` is rejected by name and
+   a misspelled key is rejected, not silently dropped) — an earlier draft of this
+   patch had a malformed hunk and did not apply at all.
+4. **`patches/02`** — small, independent, low risk. Applies cleanly and is
+   functionally verified (a standalone `Rank()` smoke test confirms the
+   `save_mode` guard now actually rejects a non-string value) — an earlier draft
+   applied "successfully" but silently dropped the `save_mode` hunk, the specific
+   bug the patch description calls out as the one users actually hit.
 5. **`fixes/requirement.txt`** → closes #718.
 6. **`fixes/Semantic_Segmentation/`** → closes #716, #717 and part of #719.
    Delete the corresponding lines from the baseline in the same PR.
 
 ## Notes on the open issues this proposal builds on
 
-- **#716 + #717** together list five broken paths. There are **six** — the sixth
-  is `testenv/testenv.yaml → acc.py`. Worth a comment on one of the issues so the
-  fix is complete.
+- **#716 + #717** together document four broken paths (#716: the `testenv:`
+  field; #717: the three module URLs). There are **six** in this one example —
+  the other two are `benchmarkingjob.yaml`'s own `algorithms[0].url` (same wrong
+  directory as #716, but a different field in the same file, unmentioned) and
+  `testenv/testenv.yaml`'s `metrics[0].url → acc.py`. Worth a comment on one of
+  the issues so the fix is complete.
 - **#719** — worth reconsidering the proposed fix. The four existing vendored
   `RFNet/` trees have all diverged (11 differing `.py` files between just two of
   them), so adding a fifth copy compounds the problem. Reframing the issue toward

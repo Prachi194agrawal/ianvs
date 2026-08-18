@@ -25,14 +25,20 @@ no-op that surfaces later as the same NotImplementedError.
 
 This patch moves both failures to parse time and names the offending key.
 
+Verified against `main` at 36ec008: applies cleanly (`git apply --check`),
+compiles, and functionally confirmed with a standalone Dataset() smoke test
+-- train_url is rejected naming train_index, a misspelled key is rejected
+by name, and a legitimate train_index/test_index config still parses.
+
 ---
- core/testenvmanager/dataset/dataset.py | 47 ++++++++++++++++++++++++++++++---
- 1 file changed, 43 insertions(+), 4 deletions(-)
+ core/testenvmanager/dataset/dataset.py | 27 ++++++++++++++++++++++++---
+ 1 file changed, 24 insertions(+), 3 deletions(-)
 
 diff --git a/core/testenvmanager/dataset/dataset.py b/core/testenvmanager/dataset/dataset.py
+index 61051c1..5022a42 100644
 --- a/core/testenvmanager/dataset/dataset.py
 +++ b/core/testenvmanager/dataset/dataset.py
-@@ -30,6 +30,25 @@
+@@ -29,6 +29,29 @@ from sedna.datasources import (
  from core.common import utils
  from core.common.constant import DatasetFormat
  
@@ -62,7 +68,7 @@ diff --git a/core/testenvmanager/dataset/dataset.py b/core/testenvmanager/datase
  # pylint: disable=too-many-instance-attributes
  class Dataset:
      """
-@@ -63,11 +82,31 @@ class Dataset:
+@@ -67,10 +90,32 @@ class Dataset:
          if self.test_data_info:
              self._check_dataset_url(self.test_data_info)
  
@@ -84,11 +90,10 @@ diff --git a/core/testenvmanager/dataset/dataset.py b/core/testenvmanager/datase
      def _parse_config(self, config):
          for attr, value in config.items():
 -            if attr in self.__dict__:
--                self.__dict__[attr] = value
 +            if attr in _DERIVED_FIELDS:
 +                self._reject_derived_field(attr, value)
 +            elif attr in _CONFIGURABLE_FIELDS:
-+                self.__dict__[attr] = value
+                 self.__dict__[attr] = value
 +            else:
 +                raise ValueError(
 +                    f"unknown dataset field '{attr}' in testenv configuration. "
@@ -96,3 +101,4 @@ diff --git a/core/testenvmanager/dataset/dataset.py b/core/testenvmanager/datase
 +                )
  
          self._check_fields()
+ 

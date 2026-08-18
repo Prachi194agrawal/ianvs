@@ -22,9 +22,12 @@
 
 ## 1. Summary
 
-Ianvs has 29 example families containing 46 runnable benchmarking jobs. I wrote a
-static validator and ran it against every one of them. It reports **235 defects
-across 19 of the 29 families** — broken file references, absolute paths pointing
+Ianvs has 28 example directories under `examples/`, 27 of which contain at least
+one runnable benchmarking job (the exception, `aoa/`, is a standalone research
+artifact with no `benchmarkingjob.yaml`) — 48 runnable benchmarking jobs in
+total. I wrote a static validator and ran it against every one of them. It
+reports **235 defects across 20 of the 27 benchmarking-job families** — broken
+file references, absolute paths pointing
 into strangers' home directories, dataset fields that Ianvs itself overwrites, and
 one `benchmarkingjob.yaml` that has never been valid YAML.
 
@@ -57,8 +60,8 @@ I have been contributing to Ianvs since February 2026.
 
 | PR | Title | Status |
 |---|---|---|
-| [#339](https://github.com/kubeedge/ianvs/pull/339) | Fix KeyError crashes and division by zero in LLM inference benchmark | Open, 9 review comments, `size/S` |
-| [#820](https://github.com/kubeedge/ianvs/pull/820) | Feature/simulation sandbox | Open, `kind/design` `kind/feature` `size/XXL` |
+| [#339](https://github.com/kubeedge/ianvs/pull/339) | Fix KeyError crashes and division by zero in LLM inference benchmark | Open, under active review, `size/S` |
+| [#820](https://github.com/kubeedge/ianvs/pull/820) | Feature/simulation sandbox | Open, `kind/design` `kind/feature` `size/XXL`, currently blocked by `do-not-merge/invalid-commit-message` (a commit needs a DCO sign-off + conventional-commit prefix; fixing before this application is reviewed) |
 
 **Issues filed** — six, all reproduced from source before filing:
 
@@ -93,7 +96,7 @@ against the repository, and cross-check each key against how `core` consumes it.
 | `missing-section` | 7 | `rank:` absent or misindented under `test_object`. See 3.4. |
 | `yaml-parse` | 1 | File is not valid YAML at all. See 3.5. |
 | `untrimmed-path` | 1 | Trailing space creates a directory literally named `workspace-perception-reasoning `. |
-| **Total** | **235** | across 19 of 29 example families |
+| **Total** | **235** | across 20 of 27 benchmarking-job families |
 
 ### 3.2 Why there are 130 broken references
 
@@ -191,7 +194,7 @@ example N does not protect examples 1 through N−1, and nothing prevents exampl
 N+1 from arriving broken.
 
 Phase IV's distinguishing bet is **ordering, applied repository-wide**: build the
-gate first, then fix behind it, for all 29 families rather than one at a time. A
+gate first, then fix behind it, for all 27 families rather than one at a time. A
 fix landed in Week 6 without a gate is a fix that can silently regress by Week 20.
 A fix landed in Week 6 behind a ratcheting baseline is permanent. The issue's third
 expected outcome — *"block PRs that break validated examples"* — is listed last but
@@ -221,10 +224,14 @@ Mapped to the three expected outcomes in issue #230.
   This is what makes the gate mergeable on day one instead of after a 235-fix
   mega-PR. Removing a line from the baseline is how a fix gets locked in.
 
-Verified end-to-end: on `examples/Cloud_Robotics/` it went 6 findings → 0 with
-`--fix`, comments intact. With the baseline in place, injecting a fresh typo into
-`examples/pcb-aoi/` produced exactly 2 new findings, correct repair suggestions,
-and a non-zero exit while the other 235 stayed suppressed.
+Verified end-to-end: on `examples/Cloud_Robotics/` it went 16 findings → 5 with
+`--fix`, comments intact. The 11 `broken-reference` findings were all repaired
+automatically; the remaining 5 (2 `derived-dataset-field`, 2 `missing-section`,
+1 `untrimmed-path`) are deliberately left for a human, since `--fix` only ever
+touches `broken-reference` — those other three classes need a judgement call,
+not a guess. With the baseline in place, injecting a fresh directory-prefix typo
+into `examples/pcb-aoi/` produced exactly 1 new finding, a correct repair
+suggestion, and a non-zero exit while the other 235 stayed suppressed.
 
 **`.github/workflows/examples-validation.yaml`** — three jobs:
 
@@ -353,9 +360,20 @@ deliverable that must not slip.
 
 I have already done the diagnostic phase of this project without being asked to. I
 filed six reproduced issues, opened two PRs, then built and tested the tooling
-attached to this proposal — including finding, in the course of verifying my own
-issue reports, a sixth broken path that #716 and #717 between them had missed, and
-three `core` bugs that no filed issue covers.
+attached to this proposal — including finding, in the course of re-verifying my
+own issue reports with that tooling, that `perception-reasoning` has **six**
+broken references in total, not the four that #716 and #717 between them
+document (#716 covers 1, the `testenv:` field; #717 covers 3, the module URLs).
+The two neither issue mentions: `benchmarkingjob.yaml`'s own `algorithms[0].url`
+line (same wrong directory, same file as #716, a different field) and
+`testenv/testenv.yaml`'s `metrics[0].url → acc.py`. I also found three `core`
+bugs that no filed issue covers, and — while re-verifying the two attached core
+patches against current `main` for this submission — that my first drafts of
+both had a malformed hunk in exactly the change each patch cares most about
+(one failed to apply at all; the other applied silently but silently dropped
+the `save_mode` fix, the specific bug the patch's own description calls out as
+"the one path users actually hit"). Both are now regenerated and re-verified
+by actually running the patched code, not just diffing it.
 
 I would rather bring a correction than a claim: my own issue #719 proposed
 vendoring a fifth RFNet copy, and having diffed the existing four I now think that
