@@ -1,0 +1,72 @@
+Subject: [PATCH] fix(storymanager): correct inverted guards in Rank._check_fields
+
+Every type guard in `Rank._check_fields` is written as
+
+    if not <value> and not isinstance(<value>, <type>):
+        raise ValueError(...)
+
+The intent is "missing **or** wrong type". `and` makes it "missing **and**
+wrong type", which is nearly never true, so the guards are effectively dead:
+
+    sort_by: []          # falsy, but *is* a list -> passes, then produces an
+                         # empty leaderboard with no error
+    visualization: {}    # falsy, but *is* a dict -> passes, then KeyErrors in plot()
+    selected_dataitem: {} # falsy, but *is* a dict -> passes, then trips the
+                          # *next* check with the misleading message
+                          # "not found paradigms of selected_dataitem in rank"
+                          # when the real problem is that the whole section is absent
+
+The last case is the one users actually hit: a benchmarkingjob whose
+`selected_dataitem` block is commented out reports a missing `paradigms` key.
+
+Separately, `save_mode` is a string ("selected_and_all" / "selected_only") but
+its guard tests `isinstance(self.save_mode, list)` and its message says it
+"must be provided and be list type", so the one path that can fire prints
+advice that would itself be invalid config.
+
+---
+ core/storymanager/rank/rank.py | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/core/storymanager/rank/rank.py b/core/storymanager/rank/rank.py
+--- a/core/storymanager/rank/rank.py
++++ b/core/storymanager/rank/rank.py
+@@ -61,25 +61,25 @@ class Rank:
+     def _check_fields(self):
+-        if not self.sort_by and not isinstance(self.sort_by, list):
++        if not self.sort_by or not isinstance(self.sort_by, list):
+             raise ValueError(
+                 f"rank's sort_by({self.sort_by}) must be provided and be list type."
+             )
+ 
+-        if not self.visualization and not isinstance(self.visualization, dict):
++        if not self.visualization or not isinstance(self.visualization, dict):
+             raise ValueError(
+                 f"rank's visualization({self.visualization}) "
+                 f"must be provided and be dict type."
+             )
+ 
+-        if not self.selected_dataitem and not isinstance(self.selected_dataitem, dict):
++        if not self.selected_dataitem or not isinstance(self.selected_dataitem, dict):
+             raise ValueError(
+                 f"rank's selected_dataitem({self.selected_dataitem}) "
+                 f"must be provided and be dict type."
+             )
+ 
+         if not self.selected_dataitem.get("paradigms"):
+             raise ValueError("not found paradigms of selected_dataitem in rank.")
+ 
+         if not self.selected_dataitem.get("modules"):
+             raise ValueError("not found modules of selected_dataitem in rank.")
+ 
+         if not self.selected_dataitem.get("metrics"):
+             raise ValueError("not found metrics of selected_dataitem in rank.")
+ 
+-        if not self.save_mode and not isinstance(self.save_mode, list):
++        if not self.save_mode or not isinstance(self.save_mode, str):
+             raise ValueError(
+-                f"rank's save_mode({self.save_mode}) "
+-                f"must be provided and be list type."
++                f"rank's save_mode({self.save_mode}) must be provided and be "
++                f"string type, one of: selected_and_all, selected_only."
+             )

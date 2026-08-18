@@ -1,0 +1,23 @@
+algorithm:
+  paradigm_type: "singletasklearning"
+  initial_model_url: "./initial_model/model.pth"
+
+  modules:
+    - type: "basemodel"
+      name: "RFNet"
+      # WAS: ./examples/cloudrobotics/singletask_learning_bench/testalgorithms/rfnet/basemodel.py
+      # "cloudrobotics" (no separator) is a fourth spelling of the directory, and
+      # the rfnet/ level does not exist in this example.
+      url: "./examples/Cloud_Robotics/singletask_learning_bench/Semantic_Segmentation/testalgorithms/basemodel.py"
+
+      hyperparameters:
+        - momentum:
+            values:
+              - 0.95
+              - 0.5
+        - learning_rate:
+            values:
+              - 0.1
+        - epochs:
+            values:
+              - 2

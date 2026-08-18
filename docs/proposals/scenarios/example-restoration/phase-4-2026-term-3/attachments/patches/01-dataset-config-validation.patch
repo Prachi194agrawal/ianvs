@@ -1,0 +1,98 @@
+Subject: [PATCH] fix(testenvmanager): reject derived and unknown dataset config keys
+
+`Dataset._parse_config` writes any config key that already exists as an
+instance attribute. Two of those attributes -- `train_url` and `test_url` --
+are not configuration at all: `process_dataset()` derives them from
+`train_index` / `train_data` / `train_data_info`.
+
+The consequence is that a testenv.yaml written as
+
+    dataset:
+      train_url: "./dataset/foo/train-index.txt"
+      test_url:  "./dataset/foo/test-index.txt"
+
+parses without complaint, passes `_check_fields()` (which never looks at
+`train_url`), and then dies inside `process_dataset()` with
+
+    NotImplementedError: not one of train_index/train_data/train_data_info
+
+which names three fields the author did not write and does not mention the
+one they did. 52 dataset blocks across 19 examples are currently in exactly
+this state.
+
+The same loop silently discards misspelled keys, so `test_idnex:` is a
+no-op that surfaces later as the same NotImplementedError.
+
+This patch moves both failures to parse time and names the offending key.
+
+---
+ core/testenvmanager/dataset/dataset.py | 47 ++++++++++++++++++++++++++++++---
+ 1 file changed, 43 insertions(+), 4 deletions(-)
+
+diff --git a/core/testenvmanager/dataset/dataset.py b/core/testenvmanager/dataset/dataset.py
+--- a/core/testenvmanager/dataset/dataset.py
++++ b/core/testenvmanager/dataset/dataset.py
+@@ -30,6 +30,25 @@
+ from core.common import utils
+ from core.common.constant import DatasetFormat
+ 
++#: Attributes assigned by ``process_dataset()``, never read from configuration.
++#: Mapped to the field the author most likely meant, by file extension.
++_DERIVED_FIELDS = {
++    "train_url": {
++        ".txt": "train_index",
++        ".json": "train_data",
++        ".jsonl": "train_data",
++        ".csv": "train_data",
++    },
++    "test_url": {
++        ".txt": "test_index",
++        ".json": "test_data",
++        ".jsonl": "test_data",
++        ".csv": "test_data",
++    },
++}
++
++#: Everything a testenv ``dataset`` block may legitimately set.
++_CONFIGURABLE_FIELDS = (
++    "train_index", "test_index", "train_data", "test_data",
++    "train_data_info", "test_data_info", "label",
++)
++
+ # pylint: disable=too-many-instance-attributes
+ class Dataset:
+     """
+@@ -63,11 +82,31 @@ class Dataset:
+         if self.test_data_info:
+             self._check_dataset_url(self.test_data_info)
+ 
++    @staticmethod
++    def _reject_derived_field(attr, value):
++        """Raise a message that names the field the author should have used."""
++        suffix = os.path.splitext(str(value))[1].lower()
++        replacement = _DERIVED_FIELDS[attr].get(suffix)
++        hint = (
++            f" Use '{replacement}' instead."
++            if replacement
++            else f" Use one of: {', '.join(_CONFIGURABLE_FIELDS[:6])}."
++        )
++        raise ValueError(
++            f"dataset field '{attr}' is derived by Ianvs from the index/data file "
++            f"and cannot be set in testenv configuration.{hint}"
++        )
++
+     def _parse_config(self, config):
+         for attr, value in config.items():
+-            if attr in self.__dict__:
+-                self.__dict__[attr] = value
++            if attr in _DERIVED_FIELDS:
++                self._reject_derived_field(attr, value)
++            elif attr in _CONFIGURABLE_FIELDS:
++                self.__dict__[attr] = value
++            else:
++                raise ValueError(
++                    f"unknown dataset field '{attr}' in testenv configuration. "
++                    f"Supported fields are: {', '.join(_CONFIGURABLE_FIELDS)}."
++                )
+ 
+         self._check_fields()

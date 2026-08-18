@@ -11,6 +11,7 @@ The proposals are organized chronologically so readers can understand how the Ex
 | Phase 1 | 2025 Term 3 | Comprehensive Example Restoration for Ianvs | [#263](https://github.com/kubeedge/ianvs/pull/263) | [`phase-1-2025-term-3/example-restoration.md`](./phase-1-2025-term-3/example-restoration.md) |
 | Phase 2 | 2026 Term 1 | Example Restoration of Ianvs | [#375](https://github.com/kubeedge/ianvs/pull/375) | [`phase-2-2026-term-1/Example_Restoration.md`](./phase-2-2026-term-1/Example_Restoration.md) |
 | Phase 3 | 2026 Term 2 | KubeEdge Ianvs Example Classification CI Validation Framework | [#541](https://github.com/kubeedge/ianvs/pull/541) | [`phase-3-2026-term-2/proposal.md`](./phase-3-2026-term-2/proposal.md) |
+| Phase 4 | 2026 Term 3 | Comprehensive Example Restoration for KubeEdge Ianvs — Phase IV | *Proposed — application pending mentor selection, no PR yet* | [`phase-4-2026-term-3/proposal.md`](./phase-4-2026-term-3/proposal.md) |
 
 ## Phase 1 — 2025 Term 3
 
@@ -29,6 +30,17 @@ It expands the restoration effort into a more concrete plan for restoring multip
 Phase 3 contains the CI validation and classification follow-up introduced through PR #541.
 
 It shifts the Example Restoration effort toward automated example health classification, pull-request validation, and sustainable maintenance workflows. It also uses `examples/llm_simple_qa` as the first concrete restoration target verified by the proposed CI framework.
+
+## Phase 4 — 2026 Term 3 (proposed)
+
+Phase 4 is an LFX Mentorship application proposal, not yet an accepted phase. It
+proposes to extend the Phase 3 CI validation direction repository-wide: a static
+validator (`scripts/validate_examples.py`) found 235 findings across 19 of the 29
+example families, all invisible to current CI. The proposal sequences a CI gate
+first (so no new example can regress), then a family-by-family repair of the
+backlog behind a shrinking baseline, then two `core` patches that convert two of
+the highest-volume defect classes from silent-accept-then-crash into fail-fast
+errors at parse time.
 
 ## Notes for Maintainers
 

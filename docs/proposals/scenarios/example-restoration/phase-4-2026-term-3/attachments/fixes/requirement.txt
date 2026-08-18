@@ -1,0 +1,29 @@
+# examples/Cloud_Robotics/cloud-edge-collaborative-inference_bench/perception-reasoning
+#
+# Fixes for issue #718 and two adjacent defects found while verifying it:
+#
+#  1. `dashscope=1.24.5` used a single `=`. PEP 440 requires `==`. pip reads the
+#     single-`=` form as a package named literally "dashscope=1.24.5" and aborts
+#     with `ERROR: Invalid requirement`. Because pip validates the whole file
+#     before installing anything, the five packages above it never installed
+#     either -- which is why this one character breaks the entire example setup.
+#
+#  2. `pytorch` is not the PyTorch distribution. The module imported as `torch`
+#     ships under the distribution name `torch`; `pytorch` is a separate PyPI
+#     placeholder. transformers' SegformerForSemanticSegmentation (edge_model.py)
+#     needs the real one.
+#
+#  3. `opencv-python` was missing entirely. cloud_edge_dispacher.py imports cv2
+#     at module scope, so the hard-example-mining module fails to load even after
+#     a "successful" install.
+#
+# `sedna` is intentionally absent: it is installed from resources/third_party by
+# the root install instructions, not from PyPI.
+
+accelerate>=0.26.0
+transformers>=4.30.0
+torch>=2.0.0
+numpy
+Pillow
+opencv-python
+dashscope==1.24.5
