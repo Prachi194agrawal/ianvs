@@ -1,0 +1,33 @@
+# Task 1 evidence build: pcb-aoi fault_detection requires TensorFlow 1.x
+# (tf.contrib.slim, removed in TF2) which has no wheels for Python 3.9+.
+# The host machine runs Python 3.12, so this image reproduces the
+# FPN_TensorFlow-declared runtime (tensorflow~=1.14.0) on Python 3.7.
+FROM python:3.7-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /ianvs
+
+COPY requirements.txt /ianvs/requirements.txt
+COPY examples/pcb-aoi/requirements.txt /ianvs/examples/pcb-aoi/requirements.txt
+COPY resources/third_party/sedna-0.6.0.1-py3-none-any.whl /ianvs/resources/third_party/sedna-0.6.0.1-py3-none-any.whl
+COPY resources/algorithms/FPN_TensorFlow-0.1-py3-none-any.whl /ianvs/resources/algorithms/FPN_TensorFlow-0.1-py3-none-any.whl
+
+RUN python -m pip install --upgrade pip==24.0 && \
+    pip install setuptools colorlog pyyaml && \
+    pip install resources/third_party/sedna-0.6.0.1-py3-none-any.whl && \
+    pip install -r requirements.txt && \
+    pip install -r examples/pcb-aoi/requirements.txt && \
+    pip install tensorflow~=1.14.0 && \
+    pip install resources/algorithms/FPN_TensorFlow-0.1-py3-none-any.whl --no-deps && \
+    pip install "protobuf<=3.20.3"
+
+COPY . /ianvs
+
+RUN python setup.py install
+
+CMD ["ianvs", "-f", "examples/pcb-aoi/singletask_learning_bench/fault_detection/benchmarkingjob.yaml"]
